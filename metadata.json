@@ -1,0 +1,6 @@
+{
+  "name": "SABA Clinic Partner Demand Portal",
+  "description": "Secure partner demand request form and clinic order management system for SABA with RESTful API standards, OAuth/JWT authentication, and AI demand forecasting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
