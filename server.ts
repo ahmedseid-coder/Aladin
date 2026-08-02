@@ -197,12 +197,16 @@ app.get('/api/v1/openapi.json', (req, res) => {
 
 // 2. Auth Endpoints
 app.post('/api/v1/auth/token', (req, res) => {
-  const { username, password, client_id, client_secret } = req.body;
+  const { username, password, client_id } = req.body;
 
-  // Check client_credentials or username/password
-  let foundUser = usersStore.find((u) => u.username === username);
-  if (!foundUser && (client_id || username)) {
-    foundUser = usersStore[1]; // Default to Dr. Abebe for demo token request
+  let foundUser: User | undefined;
+
+  if (username) {
+    foundUser = usersStore.find((u) => u.username.toLowerCase() === username.trim().toLowerCase());
+  } else if (client_id) {
+    foundUser = usersStore.find((u) => u.role === 'clinic') || usersStore[1];
+  } else {
+    foundUser = usersStore[1]; // Default fallback
   }
 
   if (foundUser) {
@@ -217,12 +221,14 @@ app.post('/api/v1/auth/token', (req, res) => {
         username: foundUser.username,
         full_name: foundUser.full_name,
         role: foundUser.role,
-        clinic_name: foundUser.clinic_name
+        clinic_name: foundUser.clinic_name || ''
       }
     });
   }
 
-  return res.status(401).json({ error: 'Invalid authentication credentials' });
+  return res.status(401).json({
+    error: 'Invalid authentication credentials. User account not found.'
+  });
 });
 
 app.post('/api/v1/auth/api-keys/generate', authenticateToken, (req: any, res: Response) => {
@@ -305,6 +311,10 @@ app.get('/api/v1/demand/requests', authenticateToken, (req: any, res: Response) 
 });
 
 app.post('/api/v1/demand/requests', authenticateToken, (req: any, res: Response) => {
+  if (req.user?.role && req.user.role !== 'clinic') {
+    return res.status(403).json({ error: 'Forbidden: Demand requests can ONLY be submitted and transmitted by authorized Clinic Partners. Center Admin, Sales Representatives, and Logistics Officers operate in review/audit mode.' });
+  }
+
   const { clinic_id, clinic_name, clinic_rep, urgency, notes, items } = req.body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
@@ -383,7 +393,11 @@ app.post('/api/v1/demand/requests', authenticateToken, (req: any, res: Response)
   });
 });
 
-app.post('/api/v1/demand/requests/:id/review', authenticateToken, (req, res) => {
+app.post('/api/v1/demand/requests/:id/review', authenticateToken, (req: any, res: Response) => {
+  if (req.user?.role === 'center_admin' || req.user?.role === 'logistic_admin') {
+    return res.status(403).json({ error: 'Forbidden: Only authorized Sales Representatives can approve or reject clinic demand requests. Center Admin and Logistic Admin operate in read-only audit mode.' });
+  }
+
   const reqId = parseInt(req.params.id);
   const { status, notes, rejection_reason } = req.body;
 
@@ -402,7 +416,7 @@ app.post('/api/v1/demand/requests/:id/review', authenticateToken, (req, res) => 
     phone: '+251922345678',
     message: smsMsg,
     direction: 'outgoing',
-    status: 'delivered',
+    status: 'sent',
     reference: demandRequestsStore[idx].order_number,
     created_at: new Date().toISOString()
   });
@@ -410,16 +424,72 @@ app.post('/api/v1/demand/requests/:id/review', authenticateToken, (req, res) => 
   res.json({ success: true, request: demandRequestsStore[idx] });
 });
 
-app.post('/api/v1/demand/requests/:id/dispatch', authenticateToken, (req, res) => {
+app.post('/api/v1/demand/requests/batch-review', authenticateToken, (req: any, res: Response) => {
+  if (req.user?.role === 'center_admin' || req.user?.role === 'logistic_admin') {
+    return res.status(403).json({ error: 'Forbidden: Only authorized Sales Representatives can approve or reject clinic demand requests.' });
+  }
+
+  const { order_ids, status, notes, rejection_reason } = req.body;
+  if (!order_ids || !Array.isArray(order_ids) || order_ids.length === 0) {
+    return res.status(400).json({ error: 'order_ids must be a non-empty array' });
+  }
+
+  let updatedCount = 0;
+  order_ids.forEach((id: number) => {
+    const idx = demandRequestsStore.findIndex((r) => r.id === id);
+    if (idx !== -1) {
+      demandRequestsStore[idx].status = status;
+      demandRequestsStore[idx].review_date = new Date().toISOString();
+      if (notes) demandRequestsStore[idx].notes = notes;
+      if (rejection_reason) demandRequestsStore[idx].rejection_reason = rejection_reason;
+
+      // Log SMS update
+      const smsMsg = `SABA BATCH UPDATE: Order ${demandRequestsStore[idx].order_number} is now ${status.toUpperCase()}.`;
+      smsLogsStore.unshift({
+        id: Date.now() + Math.random(),
+        phone: '+251922345678',
+        message: smsMsg,
+        direction: 'outgoing',
+        status: 'sent',
+        reference: demandRequestsStore[idx].order_number,
+        created_at: new Date().toISOString()
+      });
+      updatedCount++;
+    }
+  });
+
+  res.json({ success: true, updated_count: updatedCount, status });
+});
+
+app.post('/api/v1/demand/requests/:id/dispatch', authenticateToken, (req: any, res: Response) => {
+  if (req.user?.role && req.user.role !== 'logistic_admin') {
+    return res.status(403).json({ error: 'Forbidden: Order delivery confirmation and logistics vehicle dispatch can ONLY be executed by Logistics Admin / Logistics Officers.' });
+  }
   const reqId = parseInt(req.params.id);
-  const { delivered_by } = req.body;
+  const { delivered_by, delivery_source, driver_name, vehicle_plate, driver_phone } = req.body;
 
   const idx = demandRequestsStore.findIndex((r) => r.id === reqId);
   if (idx === -1) return res.status(404).json({ error: 'Demand request not found' });
 
   demandRequestsStore[idx].status = 'delivered';
   demandRequestsStore[idx].delivery_date = new Date().toISOString();
-  demandRequestsStore[idx].delivered_by = delivered_by || 'Express Courier Fleet';
+  demandRequestsStore[idx].delivered_by = delivered_by || driver_name || 'DKT Ethiopia Express Courier Fleet';
+  if (delivery_source) demandRequestsStore[idx].delivery_source = delivery_source;
+  if (driver_name) demandRequestsStore[idx].driver_name = driver_name;
+  if (vehicle_plate) demandRequestsStore[idx].vehicle_plate = vehicle_plate;
+  if (driver_phone) demandRequestsStore[idx].driver_phone = driver_phone;
+
+  // Log SMS delivery notification
+  const smsMsg = `SABA DISPATCH: Order ${demandRequestsStore[idx].order_number} DELIVERED by ${demandRequestsStore[idx].delivered_by}. Vehicle: ${vehicle_plate || 'DKT Fleet'}`;
+  smsLogsStore.unshift({
+    id: Date.now(),
+    phone: '+251922345678',
+    message: smsMsg,
+    direction: 'outgoing',
+    status: 'delivered',
+    reference: demandRequestsStore[idx].order_number,
+    created_at: new Date().toISOString()
+  });
 
   res.json({ success: true, request: demandRequestsStore[idx] });
 });

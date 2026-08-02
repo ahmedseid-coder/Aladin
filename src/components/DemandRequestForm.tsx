@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Product, ProductCategory, UrgencyLevel, DemandForecastResult, DemandRequest } from '../types';
+import { UserRole, Product, ProductCategory, UrgencyLevel, DemandForecastResult, DemandRequest } from '../types';
 import {
   Sparkles,
   ShieldCheck,
@@ -16,18 +16,22 @@ import {
   Layers,
   PhoneCall,
   Loader2,
-  Cpu
+  Cpu,
+  UserCheck
 } from 'lucide-react';
+import { SabaClinicLogo } from './Logos';
 
 interface DemandRequestFormProps {
   products: Product[];
   jwtToken: string;
+  activeRole?: UserRole;
   onOrderSubmitted: (newReq: DemandRequest) => void;
 }
 
 export const DemandRequestForm: React.FC<DemandRequestFormProps> = ({
   products,
   jwtToken,
+  activeRole,
   onOrderSubmitted
 }) => {
   // Form State
@@ -147,6 +151,8 @@ export const DemandRequestForm: React.FC<DemandRequestFormProps> = ({
     }
   };
 
+  const isClinicPartner = !activeRole || activeRole === 'clinic';
+
   // Apply AI recommendations to cart
   const handleApplyAiSuggestions = () => {
     if (!aiResult || !aiResult.suggested_orders) return;
@@ -217,46 +223,78 @@ export const DemandRequestForm: React.FC<DemandRequestFormProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Top Banner / Security Protocol Verification Header */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="bg-gradient-to-r from-red-950 via-rose-950 to-red-900 border border-red-800 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
-          <div className="lg:col-span-2 space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                Authenticated Partner Node
+          <div className="lg:col-span-2 space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* SABA Logo */}
+              <div className="flex items-center gap-2 bg-white/95 px-2 py-1 rounded-xl border border-rose-300 shadow">
+                <SabaClinicLogo className="h-8" />
+              </div>
+
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-amber-300" />
+                Authenticated Clinic Node
               </span>
-              <span className="px-3 py-1 rounded-full text-xs font-mono bg-slate-800 text-slate-300 border border-slate-700">
-                Facility Code: ETH-FP-2026-981
+
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-200 border border-amber-400/30 flex items-center gap-1.5 font-mono">
+                <UserCheck className="w-3.5 h-3.5 text-amber-300" />
+                Prepared by: Ahmed IT
               </span>
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">SABA Partner Demand Request Form</h2>
-            <p className="text-sm text-slate-300 max-w-2xl">
-              Official standardized request form for clinic partners to order reproductive health supplies, family planning commodities, emergency contraceptives, and surgical medical items under SABA API standards.
-            </p>
+
+            <div>
+              <h2 className="text-2xl font-black tracking-tight text-white">SABA Partner Demand Request Form</h2>
+              <p className="text-xs text-rose-100 max-w-2xl mt-1 leading-relaxed">
+                Official standardized demand request portal for clinic partners under <strong>DKT ETHIOPIA</strong>. Only authorized partner clinics submit orders for reproductive health commodities and family planning inventory.
+              </p>
+            </div>
           </div>
 
-          <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-300 space-y-2">
-            <div className="flex justify-between items-center text-emerald-400 font-semibold border-b border-slate-800 pb-2">
+          <div className="bg-red-900/80 border border-red-800/90 rounded-xl p-4 font-mono text-xs text-rose-100 space-y-2.5 shadow-inner">
+            <div className="flex justify-between items-center text-amber-300 font-bold border-b border-red-800 pb-2">
               <span className="flex items-center gap-1.5">
                 <Lock className="w-3.5 h-3.5" /> Security Protocol
               </span>
-              <span className="text-[10px] uppercase tracking-wider bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded">
+              <span className="text-[10px] uppercase tracking-wider bg-red-950 text-amber-300 px-2 py-0.5 rounded border border-red-800">
                 REST OAuth 2.0 / JWT
               </span>
             </div>
             <div className="truncate">
-              <span className="text-slate-500">Bearer Token: </span>
-              <span className="text-emerald-300">{jwtToken.substring(0, 24)}...</span>
+              <span className="text-rose-300/70">Bearer Token: </span>
+              <span className="text-white font-bold">{jwtToken.substring(0, 24)}...</span>
             </div>
             <div className="truncate">
-              <span className="text-slate-500">Payload Checksum: </span>
-              <span className="text-amber-400">{liveChecksum}</span>
+              <span className="text-rose-300/70">Payload Checksum: </span>
+              <span className="text-amber-300 font-bold">{liveChecksum}</span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Role Submission Notice */}
+      {activeRole && activeRole !== 'clinic' && (
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-amber-950 text-xs font-semibold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-200 text-amber-950 rounded-xl font-bold">
+              <Info className="w-5 h-5 text-amber-900" />
+            </div>
+            <div>
+              <div className="font-bold text-sm flex items-center gap-2">
+                <span>Clinic Submission Role Notice</span>
+                <span className="bg-amber-200 text-amber-950 text-[10px] px-2 py-0.5 rounded font-mono font-bold uppercase">
+                  ACTIVE ROLE: {activeRole.toUpperCase()}
+                </span>
+              </div>
+              <p className="text-amber-900 font-medium text-xs mt-0.5">
+                Official demand requests are submitted by partner clinic representatives (e.g. Dr. Abebe). You can submit this order on behalf of the clinic for testing or demonstration.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmitForm} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Clinic Details & Product Catalog */}
@@ -271,13 +309,49 @@ export const DemandRequestForm: React.FC<DemandRequestFormProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Clinic Partner Facility Name</label>
-                <input
-                  type="text"
+                <select
                   value={clinicName}
-                  onChange={(e) => setClinicName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  onChange={(e) => {
+                    const selected = e.target.value;
+                    setClinicName(selected);
+                    if (selected === 'Abebe Medical Specialty Center (Addis Ababa)') {
+                      setClinicRep('Dr. Abebe Kebede');
+                      setClinicPhone('+251922345678');
+                    } else if (selected === 'Bole Care Family Clinic') {
+                      setClinicRep('Dr. Sara Tadesse');
+                      setClinicPhone('+251933456789');
+                    } else if (selected === 'Merkato Health Center') {
+                      setClinicRep('Dr. Yohannes Alemu');
+                      setClinicPhone('+251944567890');
+                    } else if (selected === 'Hawassa Reproductive Health Center') {
+                      setClinicRep('Dr. Meron Assefa');
+                      setClinicPhone('+251911987654');
+                    } else if (selected === 'Gondar Family Care Clinic') {
+                      setClinicRep('Dr. Solomon Worku');
+                      setClinicPhone('+251955112233');
+                    } else if (selected === 'Adama Primary Care Center') {
+                      setClinicRep('Dr. Tigist Bekele');
+                      setClinicPhone('+251966223344');
+                    } else if (selected === 'St. Paul Family Planning Wing (Addis Ababa)') {
+                      setClinicRep('Dr. Ephrem Tekle');
+                      setClinicPhone('+251977334455');
+                    } else if (selected === 'Mekelle Health Partner Station') {
+                      setClinicRep('Dr. Berhane Hailu');
+                      setClinicPhone('+251988445566');
+                    }
+                  }}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                   required
-                />
+                >
+                  <option value="Abebe Medical Specialty Center (Addis Ababa)">Abebe Medical Specialty Center (Addis Ababa)</option>
+                  <option value="Bole Care Family Clinic">Bole Care Family Clinic</option>
+                  <option value="Merkato Health Center">Merkato Health Center</option>
+                  <option value="St. Paul Family Planning Wing (Addis Ababa)">St. Paul Family Planning Wing (Addis Ababa)</option>
+                  <option value="Hawassa Reproductive Health Center">Hawassa Reproductive Health Center</option>
+                  <option value="Gondar Family Care Clinic">Gondar Family Care Clinic</option>
+                  <option value="Adama Primary Care Center">Adama Primary Care Center</option>
+                  <option value="Mekelle Health Partner Station">Mekelle Health Partner Station</option>
+                </select>
               </div>
 
               <div>
@@ -474,7 +548,7 @@ export const DemandRequestForm: React.FC<DemandRequestFormProps> = ({
                           Unit: <span className="font-semibold text-slate-700">{product.unit}</span> ({product.qty_per_pack} per pack)
                         </div>
                         <div className="text-sm font-bold text-slate-900 font-mono">
-                          ETB {product.per_pack_trade.toLocaleString()}{' '}
+                          ETB {(product.per_pack_trade || 0).toLocaleString()}{' '}
                           <span className="text-[11px] font-normal text-slate-500">/ pack</span>
                         </div>
                       </div>
@@ -545,7 +619,7 @@ export const DemandRequestForm: React.FC<DemandRequestFormProps> = ({
                     </div>
                     <div className="text-right whitespace-nowrap">
                       <div className="text-xs font-bold text-emerald-300 font-mono">
-                        ETB {totalPrice.toLocaleString()}
+                        ETB {(totalPrice || 0).toLocaleString()}
                       </div>
                       <button
                         type="button"
@@ -564,7 +638,7 @@ export const DemandRequestForm: React.FC<DemandRequestFormProps> = ({
             <div className="border-t border-slate-800 pt-4 space-y-2">
               <div className="flex justify-between text-xs text-slate-400">
                 <span>Subtotal Health Trade Price:</span>
-                <span className="font-mono text-slate-200">ETB {totalAmountETB.toLocaleString()}</span>
+                <span className="font-mono text-slate-200">ETB {(totalAmountETB || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-xs text-slate-400">
                 <span>VAT Duty & Tax:</span>
@@ -572,7 +646,7 @@ export const DemandRequestForm: React.FC<DemandRequestFormProps> = ({
               </div>
               <div className="flex justify-between items-center text-base font-bold text-white pt-2 border-t border-slate-800">
                 <span>Total Demand Value:</span>
-                <span className="text-emerald-400 font-mono text-lg">ETB {totalAmountETB.toLocaleString()}</span>
+                <span className="text-emerald-400 font-mono text-lg">ETB {(totalAmountETB || 0).toLocaleString()}</span>
               </div>
             </div>
 
@@ -597,13 +671,30 @@ export const DemandRequestForm: React.FC<DemandRequestFormProps> = ({
               <div className="text-amber-300 truncate">{liveChecksum}</div>
             </div>
 
+            {!isClinicPartner && (
+              <div className="bg-amber-950/90 border border-amber-700/80 text-amber-200 p-3.5 rounded-xl text-xs space-y-1 shadow-md">
+                <div className="font-bold flex items-center gap-2 text-amber-300">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                  Role Policy: Read-Only / Exploration Mode
+                </div>
+                <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                  Demand request transmission is strictly performed by authorized <strong>Clinic Partners</strong>. As a <strong>{activeRole === 'center_admin' ? 'Center Admin' : activeRole === 'sales_rep' ? 'Sales Representative' : 'Logistics Admin'}</strong>, order submission is disabled.
+                </p>
+              </div>
+            )}
+
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isSubmitting || selectedProductList.length === 0}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+              disabled={isSubmitting || selectedProductList.length === 0 || !isClinicPartner}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? (
+              {!isClinicPartner ? (
+                <>
+                  <Lock className="w-4 h-4 text-slate-950" />
+                  Transmit Reserved for Clinic Partners Only
+                </>
+              ) : isSubmitting ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin text-slate-950" />
                   Encrypting & Transmitting Payload...
@@ -640,7 +731,7 @@ export const DemandRequestForm: React.FC<DemandRequestFormProps> = ({
               </div>
               <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
                 <div>Clinic: <span className="text-white">{submittedOrder.clinic_name}</span></div>
-                <div>Amount: <span className="text-emerald-300 font-bold">ETB {submittedOrder.total_amount.toLocaleString()}</span></div>
+                <div>Amount: <span className="text-emerald-300 font-bold">ETB {(submittedOrder.total_amount || 0).toLocaleString()}</span></div>
                 <div>Auth Method: <span className="text-teal-300">{submittedOrder.auth_method}</span></div>
                 <div>Items Count: <span className="text-white">{submittedOrder.items.length} Products</span></div>
               </div>

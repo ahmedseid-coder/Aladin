@@ -11,8 +11,10 @@ import {
   Terminal,
   ShieldCheck,
   FileCode,
-  Zap
+  Zap,
+  UserCheck
 } from 'lucide-react';
+import { SabaClinicLogo } from './Logos';
 
 interface ApiPlaygroundProps {
   jwtToken: string;
@@ -184,16 +186,26 @@ print(response.json())`;
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header */}
-      <div className="bg-slate-900 border border-slate-800 text-white p-6 rounded-2xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1.5 font-mono">
+      <div className="bg-gradient-to-r from-red-950 via-rose-950 to-red-900 border border-red-800 text-white p-6 rounded-2xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 bg-white/95 px-2 py-1 rounded-xl border border-rose-300 shadow">
+              <SabaClinicLogo className="h-7" />
+            </div>
+
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center gap-1.5 font-mono">
               <Server className="w-3.5 h-3.5" /> REST API v1.4 Sandbox
             </span>
+
+            <div className="px-3 py-1 bg-amber-500/20 border border-amber-400/40 text-amber-200 rounded-full text-xs font-bold flex items-center gap-1.5 font-mono">
+              <UserCheck className="w-3.5 h-3.5 text-amber-300" />
+              Prepared by: Ahmed IT
+            </div>
           </div>
-          <h2 className="text-xl font-bold text-white mt-2">API Integration & Security Protocols Center</h2>
-          <p className="text-xs text-slate-300">
-            OpenAPI 3.0 specification tester, API Key Generator, JWT token issuing service, and cURL / Fetch code generators.
+
+          <h2 className="text-xl font-black text-white">API Integration & Security Protocols Center</h2>
+          <p className="text-xs text-rose-100 font-medium">
+            OpenAPI 3.0 specification tester under DKT ETHIOPIA, API Key Generator, JWT token issuing service, and cURL / Fetch code generators.
           </p>
         </div>
 

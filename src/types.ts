@@ -1,4 +1,4 @@
-export type UserRole = 'clinic' | 'sales' | 'admin';
+export type UserRole = 'clinic' | 'sales' | 'admin' | 'center_admin';
 
 export interface User {
   id: number;
@@ -52,6 +52,8 @@ export interface DemandOrderItem {
   total_price: number;
 }
 
+export type DeliverySource = 'dkt_sales_fleet' | 'partner_self_pickup' | 'express_courier';
+
 export interface DemandRequest {
   id: number;
   order_number: string;
@@ -71,6 +73,10 @@ export interface DemandRequest {
   review_date?: string | null;
   delivery_date?: string | null;
   delivered_by?: string | null;
+  delivery_source?: DeliverySource | string;
+  driver_name?: string;
+  vehicle_plate?: string;
+  driver_phone?: string;
   items: DemandOrderItem[];
 }
 
@@ -109,4 +115,26 @@ export interface DemandForecastResult {
   stockout_risk_score: number; // 0-100
   clinical_insight: string;
   suggested_orders: ForecastItem[];
+}
+
+export interface ClinicConsumptionStatus {
+  clinic_name: string;
+  total_orders_placed: number;
+  total_spend_etb: number;
+  last_order_date: string;
+  stock_burn_rate_status: 'Optimal' | 'High Consumption' | 'Low Inventory Alert' | 'Emergency Needed';
+  primary_category_consumed: string;
+  delivery_fulfillment_rate: number; // percentage e.g. 100
+}
+
+export interface ProductDeliveryAvailability {
+  product_id: number;
+  product_code: string;
+  name: string;
+  category: string;
+  warehouse_stock_packs: number;
+  allocated_pending_packs: number;
+  available_free_packs: number;
+  stock_status: 'In Stock' | 'Low Stock' | 'Allocated Out' | 'Critical Shortage';
+  estimated_delivery_lead_days: number;
 }

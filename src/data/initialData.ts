@@ -20,6 +20,7 @@ export const INITIAL_PRODUCTS: Product[] = [
 
 export const INITIAL_USERS: User[] = [
   { id: 1, username: 'admin', full_name: 'SABA HQ Logistics Lead', role: 'admin', phone: '+251911234567', is_active: true, notes: 'System Administrator & Central Warehouse Lead' },
+  { id: 7, username: 'centeradmin', full_name: 'SABA Central Executive (Center Admin)', role: 'center_admin', phone: '+251911990000', is_active: true, notes: 'Read-Only Executive Auditor - Complete System Visibility & Decision Support' },
   { id: 2, username: 'clinic1', full_name: 'Dr. Abebe Kebede', role: 'clinic', clinic_name: 'Abebe Medical Specialty Center (Addis Ababa)', phone: '+251922345678', is_active: true, notes: 'Level 3 Family Planning Partner Clinic' },
   { id: 3, username: 'clinic2', full_name: 'Dr. Sara Tadesse', role: 'clinic', clinic_name: 'Bole Care Family Clinic', phone: '+251933456789', is_active: true, notes: 'High volume urban clinic partner' },
   { id: 4, username: 'clinic3', full_name: 'Dr. Yohannes Alemu', role: 'clinic', clinic_name: 'Merkato Health Center', phone: '+251944567890', is_active: true, notes: 'Community health station' },
